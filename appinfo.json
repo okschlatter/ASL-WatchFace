@@ -1,0 +1,41 @@
+{
+    "appKeys": {
+        "KEY_CONDITIONS": 1,
+        "KEY_TEMPERATURE": 0
+    },
+    "capabilities": [
+        "location"
+    ],
+    "companyName": "scottybrackett@gmail.com",
+    "longName": "TIME_WEATHER",
+    "projectType": "native",
+    "resources": {
+        "media": [
+            {
+                "file": "images/asl_resized_mono.png",
+                "name": "SPARK_ICON",
+                "type": "png"
+            },
+            {
+                "file": "fonts/8-BIT WONDER.TTF",
+                "name": "SYNC_BOLD_24",
+                "type": "font"
+            },
+            {
+                "file": "fonts/C&C Red Alert [INET].ttf",
+                "name": "SYNC_14",
+                "type": "font"
+            }
+        ]
+    },
+    "sdkVersion": "3",
+    "shortName": "TIME_WEATHER",
+    "targetPlatforms": [
+        "aplite"
+    ],
+    "uuid": "66a1e271-1c08-463c-ae5a-df468c62af9b",
+    "versionLabel": "1.0",
+    "watchapp": {
+        "watchface": true
+    }
+}
