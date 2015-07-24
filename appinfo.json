@@ -1,6 +1,7 @@
 {
     "appKeys": {
         "KEY_CONDITIONS": 1,
+        "KEY_INVERT": 2,
         "KEY_TEMPERATURE": 0
     },
     "capabilities": [
@@ -12,9 +13,9 @@
     "resources": {
         "media": [
             {
-                "file": "images/asl_resized_mono.png",
-                "name": "SPARK_ICON",
-                "type": "png"
+                "file": "fonts/C&C Red Alert [INET].ttf",
+                "name": "SYNC_14",
+                "type": "font"
             },
             {
                 "file": "fonts/8-BIT WONDER.TTF",
@@ -22,9 +23,9 @@
                 "type": "font"
             },
             {
-                "file": "fonts/C&C Red Alert [INET].ttf",
-                "name": "SYNC_14",
-                "type": "font"
+                "file": "images/asl_resized_mono.png",
+                "name": "SPARK_ICON",
+                "type": "png"
             }
         ]
     },

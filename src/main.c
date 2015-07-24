@@ -9,6 +9,7 @@ static BitmapLayer *s_background_layer;
 static GBitmap *s_background_bitmap;
 #define KEY_TEMPERATURE 0
 #define KEY_CONDITIONS 1
+bool invert;
 
 static void update_time() {
   // Get a tm structure
@@ -35,6 +36,18 @@ static void update_time() {
   text_layer_set_text(s_time_layer, buffer);
 }
 
+static void tap_handler(AccelAxisType axis, int32_t direction) {
+ APP_LOG(APP_LOG_LEVEL_INFO, "Detected Tap/Twist");
+	
+	if (invert == 1){
+		invert = 0;
+		APP_LOG(APP_LOG_LEVEL_INFO, "Set bool invert as 0");
+	} 
+	else {
+		invert = 1;
+		APP_LOG(APP_LOG_LEVEL_INFO, "Set bool invert as 1");
+	}
+}
 
 static void main_window_load(Window *window) {
   // Create GBitmap, then set to created BitmapLayer
@@ -72,6 +85,9 @@ static void main_window_load(Window *window) {
 
   // Add it as a child layer to the Window's root layer
   layer_add_child(window_get_root_layer(window), text_layer_get_layer(s_time_layer));
+	
+	//Subscribe to Accelerometer tap service
+	accel_tap_service_subscribe(tap_handler);
 }
 
 static void main_window_unload(Window *window) {
