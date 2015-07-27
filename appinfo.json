@@ -13,6 +13,11 @@
     "resources": {
         "media": [
             {
+                "file": "images/asl_resized_dithered.png",
+                "name": "SPARK_ICON_LIGHT",
+                "type": "png"
+            },
+            {
                 "file": "fonts/C&C Red Alert [INET].ttf",
                 "name": "SYNC_14",
                 "type": "font"

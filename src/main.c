@@ -42,23 +42,41 @@ static void tap_handler(AccelAxisType axis, int32_t direction) {
 	if (invert == 1){
 		invert = 0;
 		APP_LOG(APP_LOG_LEVEL_INFO, "Set bool invert as 0");
+		
+		//Change the colors
+	text_layer_set_background_color(s_weather_layer, GColorBlack);
+	text_layer_set_text_color(s_weather_layer, GColorWhite);
+	text_layer_set_background_color(s_time_layer, GColorWhite);
+	text_layer_set_text_color(s_time_layer, GColorBlack);
+	s_background_bitmap = gbitmap_create_with_resource(RESOURCE_ID_SPARK_ICON_LIGHT);
+	s_background_layer = bitmap_layer_create(GRect(0, 1, 144, 180));
+	bitmap_layer_set_bitmap(s_background_layer, s_background_bitmap);
 	} 
 	else {
 		invert = 1;
 		APP_LOG(APP_LOG_LEVEL_INFO, "Set bool invert as 1");
+		
+		//Change the colors
+	text_layer_set_background_color(s_weather_layer, GColorWhite);
+	text_layer_set_text_color(s_weather_layer, GColorBlack);
+	text_layer_set_background_color(s_time_layer, GColorBlack);
+	text_layer_set_text_color(s_time_layer, GColorWhite);
+	s_background_bitmap = gbitmap_create_with_resource(RESOURCE_ID_SPARK_ICON);
+	s_background_layer = bitmap_layer_create(GRect(0, 1, 144, 180));
+	bitmap_layer_set_bitmap(s_background_layer, s_background_bitmap);
 	}
 }
 
 static void main_window_load(Window *window) {
   // Create GBitmap, then set to created BitmapLayer
   s_background_bitmap = gbitmap_create_with_resource(RESOURCE_ID_SPARK_ICON);
-  s_background_layer = bitmap_layer_create(GRect(0, 0, 144, 180));
+  s_background_layer = bitmap_layer_create(GRect(0, 1, 144, 180));
   bitmap_layer_set_bitmap(s_background_layer, s_background_bitmap);
   layer_add_child(window_get_root_layer(window), bitmap_layer_get_layer(s_background_layer));
   
   // Create temperature Layer
   s_weather_layer = text_layer_create(GRect(0, 0, 144, 15));
-  
+  //A file called "Line 66" would go here
   text_layer_set_background_color(s_weather_layer, GColorWhite);
   text_layer_set_text_color(s_weather_layer, GColorBlack);
   text_layer_set_text_alignment(s_weather_layer, GTextAlignmentCenter);
@@ -74,8 +92,8 @@ static void main_window_load(Window *window) {
   layer_add_child(window_get_root_layer(window), text_layer_get_layer(s_weather_layer));
 
   //time layer
-  s_time_layer = text_layer_create(GRect(15, 141, 120, 40));
-  text_layer_set_background_color(s_time_layer, GColorClear);
+  s_time_layer = text_layer_create(GRect(0, 144, 144, 24));
+  text_layer_set_background_color(s_time_layer, GColorBlack);
   text_layer_set_text_color(s_time_layer, GColorWhite);
   text_layer_set_text(s_time_layer, "00:00");
 
