@@ -10,9 +10,20 @@
     "resources": {
         "media": [
             {
+                "file": "images/asl_resized_dithered_inverted.png",
+                "name": "LOGO_BW",
+                "targetPlatforms": [
+                    "aplite"
+                ],
+                "type": "bitmap"
+            },
+            {
                 "file": "images/asl_color_white.png",
                 "name": "LOGO",
-                "targetPlatforms": null,
+                "targetPlatforms": [
+                    "basalt",
+                    "chalk"
+                ],
                 "type": "bitmap"
             },
             {
@@ -27,6 +38,7 @@
     "sdkVersion": "3",
     "shortName": "ASL Big #",
     "targetPlatforms": [
+        "aplite",
         "basalt",
         "chalk"
     ],

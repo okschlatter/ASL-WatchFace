@@ -39,7 +39,11 @@ static void main_window_load(Window *window) {
   GRect bounds = layer_get_bounds(window_get_root_layer(window));
   
   // Load the image
-logo_bitmap = gbitmap_create_with_resource(RESOURCE_ID_LOGO);
+  #ifdef PBL_COLOR
+    logo_bitmap = gbitmap_create_with_resource(RESOURCE_ID_LOGO);
+  #else
+    logo_bitmap = gbitmap_create_with_resource(RESOURCE_ID_LOGO_BW);
+  #endif
 
 // Create a BitmapLayer
 logo_layer = bitmap_layer_create(bounds);
@@ -63,7 +67,7 @@ layer_add_child(window_get_root_layer(window), bitmap_layer_get_layer(logo_layer
     s_hour_layer = text_layer_create(GRect (0, 35, 180, 54));
   #endif
 	text_layer_set_background_color(s_hour_layer, GColorClear);
-	text_layer_set_text_color(s_hour_layer, GColorBlack);
+  text_layer_set_text_color(s_hour_layer, GColorBlack);
 	text_layer_set_text(s_hour_layer, "00");
 	
 	//Minute Layer
