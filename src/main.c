@@ -1,191 +1,126 @@
 #include <pebble.h>
 
 static Window *s_main_window;
-static TextLayer *s_time_layer;  
-static TextLayer *s_weather_layer;
-static GFont s_time_font;
-static GFont s_weather_font;
-static BitmapLayer *s_background_layer;
-static GBitmap *s_background_bitmap;
-#define KEY_TEMPERATURE 0
-#define KEY_CONDITIONS 1
+static TextLayer *s_hour_layer;
+static TextLayer *s_minutes_layer;
+static GFont s_hour_font;
+static GFont s_minutes_font;
+static BitmapLayer *logo_layer;
+static GBitmap *logo_bitmap;
 
 static void update_time() {
-  // Get a tm structure
-  time_t temp = time(NULL); 
-  struct tm *tick_time = localtime(&temp);
-
-  // Create a long-lived buffer
-  static char buffer[] = "00:00";
-
-  //TEST:
-   //Use 12 hour format
-//strftime(buffer, sizeof("00:00"),"%H*%M", tick_time);
-//PRODUCTION:
-   // Write the current hours and minutes into the buffer
-  if(clock_is_24h_style() == true) {
-    // Use 24 hour format
-	  strftime(buffer, sizeof("00:00:00"), "%H:%M", tick_time);
-   } else {
-     // Use 12 hour format
-     strftime(buffer, sizeof("00:00:00"),"%I:%M", tick_time);
-   }
-
-  // Display this time on the TextLayer
-  text_layer_set_text(s_time_layer, buffer);
+	time_t temp = time(NULL);
+	struct tm *tick_time = localtime(&temp);
+	
+	static char buffer[] = "00";
+	static char buffer2[] = "00";
+	
+	if (clock_is_24h_style() == true) {
+		//24-hour time
+		strftime(buffer, sizeof("00"), "%H", tick_time);
+		strftime(buffer2, sizeof("00"), "%M", tick_time);
+	} else {
+		//12-hour time
+		strftime(buffer, sizeof("00"), "%I", tick_time);
+		strftime(buffer2, sizeof("00"), "%M", tick_time);
+	}
+	
+	//Display hours on hour layer
+	text_layer_set_text(s_hour_layer, buffer);
+	//Display minutes on minutes layer
+	text_layer_set_text(s_minutes_layer, buffer2);
 }
 
-
 static void main_window_load(Window *window) {
-  // Create GBitmap, then set to created BitmapLayer
-  s_background_bitmap = gbitmap_create_with_resource(RESOURCE_ID_SPARK_ICON);
-  s_background_layer = bitmap_layer_create(GRect(0, 0, 144, 180));
-  bitmap_layer_set_bitmap(s_background_layer, s_background_bitmap);
-  layer_add_child(window_get_root_layer(window), bitmap_layer_get_layer(s_background_layer));
+	
+	window_set_background_color(s_main_window, GColorWhite);
   
-  // Create temperature Layer
-  s_weather_layer = text_layer_create(GRect(0, 0, 144, 15));
+  // Get the Window's root layer and the bounds
+  GRect bounds = layer_get_bounds(window_get_root_layer(window));
   
-  text_layer_set_background_color(s_weather_layer, GColorWhite);
-  text_layer_set_text_color(s_weather_layer, GColorBlack);
-  text_layer_set_text_alignment(s_weather_layer, GTextAlignmentCenter);
-  text_layer_set_text(s_weather_layer, "Loading...");
-  
-  // Create time TextLayer
-  s_time_font = fonts_load_custom_font(resource_get_handle(RESOURCE_ID_SYNC_BOLD_24));
-  // Create second custom font, apply it and add to Window
-  s_weather_font = fonts_load_custom_font(resource_get_handle(RESOURCE_ID_SYNC_14));
+  // Load the image
+logo_bitmap = gbitmap_create_with_resource(RESOURCE_ID_LOGO);
 
-  //Weather layer
-  text_layer_set_font(s_weather_layer, s_weather_font);
-  layer_add_child(window_get_root_layer(window), text_layer_get_layer(s_weather_layer));
+// Create a BitmapLayer
+logo_layer = bitmap_layer_create(bounds);
 
-  //time layer
-  s_time_layer = text_layer_create(GRect(15, 141, 120, 40));
-  text_layer_set_background_color(s_time_layer, GColorClear);
-  text_layer_set_text_color(s_time_layer, GColorWhite);
-  text_layer_set_text(s_time_layer, "00:00");
+// Set the bitmap and center it
+bitmap_layer_set_bitmap(logo_layer, logo_bitmap);
+bitmap_layer_set_alignment(logo_layer, GAlignCenter);
 
-  // Improve the layout to be more like a watchface
-  text_layer_set_font(s_time_layer, s_time_font);
-  text_layer_set_text_alignment(s_time_layer, GTextAlignmentCenter);
-
-  // Add it as a child layer to the Window's root layer
-  layer_add_child(window_get_root_layer(window), text_layer_get_layer(s_time_layer));
+// Add to the Window
+layer_add_child(window_get_root_layer(window), bitmap_layer_get_layer(logo_layer));
+	
+	//Create hour TextLayer
+	s_hour_font = fonts_load_custom_font(resource_get_handle(RESOURCE_ID_SYNC_BOLD_50));
+	//Create minutes TextLayer
+	s_minutes_font = fonts_load_custom_font(resource_get_handle(RESOURCE_ID_SYNC_BOLD_50));
+	
+	//Hour Layer
+  #if defined(PBL_RECT) 
+	  s_hour_layer = text_layer_create(GRect (0, 30, 144, 54));
+  #elif defined(PBL_ROUND)
+    s_hour_layer = text_layer_create(GRect (0, 35, 180, 54));
+  #endif
+	text_layer_set_background_color(s_hour_layer, GColorClear);
+	text_layer_set_text_color(s_hour_layer, GColorBlack);
+	text_layer_set_text(s_hour_layer, "00");
+	
+	//Minute Layer
+	#if defined(PBL_RECT) 
+    s_minutes_layer = text_layer_create(GRect (0, 74, 144, 54));
+  #elif defined(PBL_ROUND) 
+    s_minutes_layer = text_layer_create(GRect (0, 79, 180, 54));
+  #endif
+	text_layer_set_background_color(s_minutes_layer, GColorClear);
+	text_layer_set_text_color(s_minutes_layer, GColorBlack);
+	text_layer_set_text(s_minutes_layer, "00");
+	
+	//Make it look more like a watch
+	text_layer_set_font(s_hour_layer, s_hour_font);
+	text_layer_set_font(s_minutes_layer, s_minutes_font);
+	text_layer_set_text_alignment(s_hour_layer, GTextAlignmentCenter);
+	text_layer_set_text_alignment(s_minutes_layer, GTextAlignmentCenter);
+	
+	//Add hour and miuntes layers as child windows to the Window's root layer
+	layer_add_child(window_get_root_layer(window), text_layer_get_layer(s_hour_layer));
+	layer_add_child(window_get_root_layer(window), text_layer_get_layer(s_minutes_layer));
+	
+	
 }
 
 static void main_window_unload(Window *window) {
-    
-    // Unload GFont
-    fonts_unload_custom_font(s_time_font);
-    // Destroy time layer
-    text_layer_destroy(s_time_layer);
-    // Destroy weather layer
-    text_layer_destroy(s_weather_layer);
-    // destroy custom font
-    fonts_unload_custom_font(s_weather_font);
-    // how to destroy the background image?
+	
+	//Unload GFonts
+	fonts_unload_custom_font(s_hour_font);
+	fonts_unload_custom_font(s_minutes_font);
+	
+	//Destroy hour layer
+	text_layer_destroy(s_hour_layer);
+	//Destroy minutes layer
+	text_layer_destroy(s_minutes_layer);
+	
 }
 
-//register all events
 static void tick_handler(struct tm *tick_time, TimeUnits units_changed) {
  update_time();
-  // Get weather update every 30 minutes
-  if(tick_time->tm_min % 1 == 0) {
-    // Begin dictionary
-    DictionaryIterator *iter;
-    app_message_outbox_begin(&iter);
-  
-    // Add a key-value pair
-    dict_write_uint8(iter, 0, 0);
-  
-    // Send the message!
-    app_message_outbox_send();
-  }
 }
-
-static void inbox_received_callback(DictionaryIterator *iterator, void *context) {
-  // Store incoming information
-  static char temperature_buffer[8];
-  static char conditions_buffer[32];
-  static char weather_layer_buffer[32];
-  
-  // Read first item
-  Tuple *t = dict_read_first(iterator);
-
-  // For all items
-  while(t != NULL) {
-    // Which key was received?
-    switch(t->key) {
-    case KEY_TEMPERATURE:
-      snprintf(temperature_buffer, sizeof(temperature_buffer), "%dF", (int)t->value->int32);
-      break;
-    case KEY_CONDITIONS:
-      snprintf(conditions_buffer, sizeof(conditions_buffer), "%s", t->value->cstring);
-      break;
-    default:
-      APP_LOG(APP_LOG_LEVEL_ERROR, "Key %d not recognized!", (int)t->key);
-      break;
-    }
-
-    // Look for next item
-    t = dict_read_next(iterator);
-  }
-  
-  // Assemble full string and display
-  snprintf(weather_layer_buffer, sizeof(weather_layer_buffer), "%s, %s", temperature_buffer, conditions_buffer);
-  text_layer_set_text(s_weather_layer, weather_layer_buffer);
-}
-
-
-
-static void inbox_dropped_callback(AppMessageResult reason, void *context) {
-  APP_LOG(APP_LOG_LEVEL_ERROR, "Message dropped!");
-}
-
-static void outbox_failed_callback(DictionaryIterator *iterator, AppMessageResult reason, void *context) {
-  APP_LOG(APP_LOG_LEVEL_ERROR, "Outbox send failed!");
-}
-
-static void outbox_sent_callback(DictionaryIterator *iterator, void *context) {
-  APP_LOG(APP_LOG_LEVEL_INFO, "Outbox send success!");
-}
-
 
 static void init() {
- 
-  // Register with TickTimerService
-  tick_timer_service_subscribe(MINUTE_UNIT, tick_handler);
-  
-  // Register callbacks
-  app_message_register_inbox_received(inbox_received_callback);
-  app_message_register_inbox_dropped(inbox_dropped_callback);
-  app_message_register_outbox_failed(outbox_failed_callback);
-  app_message_register_outbox_sent(outbox_sent_callback);
-  
-  // Open AppMessage
-  app_message_open(app_message_inbox_size_maximum(), app_message_outbox_size_maximum());
-
-  
-  // Create main Window element and assign to pointer
-  s_main_window = window_create();
-
-  // Set handlers to manage the elements inside the Window
-  window_set_window_handlers(s_main_window, (WindowHandlers) {
+	
+	tick_timer_service_subscribe(MINUTE_UNIT, tick_handler);
+	s_main_window = window_create();
+	window_set_window_handlers(s_main_window, (WindowHandlers) {
     .load = main_window_load,
     .unload = main_window_unload
   });
-
-  // Show the Window on the watch, with animated=true
-  window_stack_push(s_main_window, true);
-  
-  // Make sure the time is displayed from the start
-  update_time();
+	window_stack_push(s_main_window, true);
+	update_time();
 }
 
 static void deinit() {
-    // Destroy Window
-    window_destroy(s_main_window);
+	//Destroy Window
+	window_destroy(s_main_window);
 }
 
 int main(void) {
