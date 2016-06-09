@@ -1,5 +1,9 @@
 #include <pebble.h>
 
+#define KEY_COLOR_RED     0
+#define KEY_COLOR_GREEN   1
+#define KEY_COLOR_BLUE    2
+
 static Window *s_main_window;
 static TextLayer *s_hour_layer;
 static TextLayer *s_minutes_layer;
@@ -7,6 +11,40 @@ static GFont s_hour_font;
 static GFont s_minutes_font;
 static BitmapLayer *logo_layer;
 static GBitmap *logo_bitmap;
+
+// static bool gcolor_is_dark(GColor color) {
+// #if defined(PBL_BW)
+//   return gcolor_equal(color, GColorBlack);
+// #elif defined(PBL_COLOR)
+//   return color.r < 2 && color.g < 2 && color.b < 2;
+// #endif
+// }
+
+static void inbox_recieved_handler(DictionaryIterator *iter, void *context) {
+  // Color Scheme?
+  Tuple *color_red_t = dict_find(iter, KEY_COLOR_RED);
+  Tuple *color_green_t = dict_find(iter, KEY_COLOR_GREEN);
+  Tuple *color_blue_t = dict_find(iter, KEY_COLOR_BLUE);
+  if(color_red_t && color_green_t && color_blue_t) {
+  
+  // Apply the color, if available
+  #if defined(PBL_BW)
+    window_set_background_color(s_main_window, GColorWhite);
+  #elif defined(PBL_COLOR)
+    int red = color_red_t->value->int32;
+    int green = color_green_t->value->int32;
+    int blue = color_blue_t->value->int32;
+  
+    // Persist values
+    persist_write_int(KEY_COLOR_RED, red);
+    persist_write_int(KEY_COLOR_GREEN, green);
+    persist_write_int(KEY_COLOR_BLUE, blue);
+  
+    GColor bg_color = GColorFromRGB(red, green, blue);
+    window_set_background_color(s_main_window, bg_color);
+  #endif
+  }
+}
 
 static void update_time() {
 	time_t temp = time(NULL);
@@ -33,7 +71,16 @@ static void update_time() {
 
 static void main_window_load(Window *window) {
 	
-	window_set_background_color(s_main_window, GColorWhite);
+#if defined(PBL_BW)
+  window_set_background_color(s_main_window, GColorWhite);
+#elif defined(PBLE_COLOR)
+  int red = persist_read_int(KEY_COLOR_RED);
+  int green = persist_read_int(KEY_COLOR_GREEN);
+  int blue = persist_read_int(KEY_COLOR_BLUE);
+  
+  GColor bg_color = GColorFromRGB(red, green, blue);
+  window_set_background_color(s_main_window, bg_color);
+#endif
   
   // Get the Window's root layer and the bounds
   GRect bounds = layer_get_bounds(window_get_root_layer(window));
@@ -120,6 +167,9 @@ static void init() {
   });
 	window_stack_push(s_main_window, true);
 	update_time();
+  
+  app_message_register_inbox_recieved(inbox_recieved_handler);
+  app_message_open(app_message_inbox_size_maximum(), app_message_outbox_size_maximum());
 }
 
 static void deinit() {
