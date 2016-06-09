@@ -1,0 +1,58 @@
+{
+    "author": "kenneth.schlatter@gmail.com",
+    "dependencies": {},
+    "keywords": [],
+    "name": "asl-big",
+    "pebble": {
+        "capabilities": [
+            "configurable"
+        ],
+        "displayName": "ASL Big Numbrs",
+        "enableMultiJS": false,
+        "messageKeys": {
+            "KEY_COLOR_BLUE": 2,
+            "KEY_COLOR_GREEN": 1,
+            "KEY_COLOR_RED": 0
+        },
+        "projectType": "native",
+        "resources": {
+            "media": [
+                {
+                    "file": "images/asl_resized_dithered_inverted.png",
+                    "name": "LOGO_BW",
+                    "targetPlatforms": [
+                        "aplite"
+                    ],
+                    "type": "bitmap"
+                },
+                {
+                    "file": "images/asl_color_white.png",
+                    "name": "LOGO",
+                    "targetPlatforms": [
+                        "basalt",
+                        "chalk"
+                    ],
+                    "type": "bitmap"
+                },
+                {
+                    "characterRegex": "[0-9:APM ]",
+                    "file": "fonts/Syncopate-Bold.ttf",
+                    "name": "SYNC_BOLD_50",
+                    "targetPlatforms": null,
+                    "type": "font"
+                }
+            ]
+        },
+        "sdkVersion": "3",
+        "targetPlatforms": [
+            "aplite",
+            "basalt",
+            "chalk"
+        ],
+        "uuid": "2b84f4e5-5d93-4350-99ed-6db1638c92a9",
+        "watchapp": {
+            "watchface": true
+        }
+    },
+    "version": "1.0.0"
+}
