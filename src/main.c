@@ -88,7 +88,7 @@ static void main_window_load(Window *window) {
   // Load the image
   #ifdef PBL_COLOR
     logo_bitmap = gbitmap_create_with_resource(RESOURCE_ID_LOGO);
-    bitmap_layer_set_compositing_mode(logo_layer, GCompOpSet);
+//     bitmap_layer_set_compositing_mode(logo_layer, GCompOpSet);
   #else
     logo_bitmap = gbitmap_create_with_resource(RESOURCE_ID_LOGO_BW);
   #endif
@@ -99,6 +99,7 @@ logo_layer = bitmap_layer_create(bounds);
 // Set the bitmap and center it
 bitmap_layer_set_bitmap(logo_layer, logo_bitmap);
 bitmap_layer_set_alignment(logo_layer, GAlignCenter);
+bitmap_layer_set_compositing_mode(logo_layer, GCompOpSet);
 
 // Add to the Window
 layer_add_child(window_get_root_layer(window), bitmap_layer_get_layer(logo_layer));

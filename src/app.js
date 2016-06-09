@@ -2,8 +2,8 @@ Pebble.addEventListener('ready', function(){
   console.log('PebbleKit JS ready!');
 });
 
-Pebble.addEvenetListener('showConfiguration', function(){
-  var url = 'http://kennethschlatter.github.io/ASL-Config/';
+Pebble.addEventListener('showConfiguration', function(){
+  var url = 'http://kennethschlatter.github.io/ASL-Config/index.html';
   console.log('Showing configuration page: ' + url);
   
   Pebble.openURL(url);
@@ -18,7 +18,7 @@ Pebble.addEventListener('webviewclosed', function(e){
   var dict = {};
   {
     dict.KEY_COLOR_RED = parseInt(backgroundColor.substring(2, 4), 16);
-    dict.KEY_COLOR_GREEN = parseInt(backgroundColor.subsrting(4, 6), 16);
+    dict.KEY_COLOR_GREEN = parseInt(backgroundColor.substring(4, 6), 16);
     dict.KEY_COLOR_BLUE = parseInt(backgroundColor.substring(6), 16);
   }
   
