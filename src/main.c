@@ -20,7 +20,7 @@ static GBitmap *logo_bitmap;
 // #endif
 // }
 
-static void inbox_recieved_handler(DictionaryIterator *iter, void *context) {
+static void inbox_received_handler(DictionaryIterator *iter, void *context) {
   // Color Scheme?
   Tuple *color_red_t = dict_find(iter, KEY_COLOR_RED);
   Tuple *color_green_t = dict_find(iter, KEY_COLOR_GREEN);
@@ -88,6 +88,7 @@ static void main_window_load(Window *window) {
   // Load the image
   #ifdef PBL_COLOR
     logo_bitmap = gbitmap_create_with_resource(RESOURCE_ID_LOGO);
+    bitmap_layer_set_compositing_mode(logo_layer, GCompOpSet);
   #else
     logo_bitmap = gbitmap_create_with_resource(RESOURCE_ID_LOGO_BW);
   #endif
@@ -158,7 +159,6 @@ static void tick_handler(struct tm *tick_time, TimeUnits units_changed) {
 }
 
 static void init() {
-	
 	tick_timer_service_subscribe(MINUTE_UNIT, tick_handler);
 	s_main_window = window_create();
 	window_set_window_handlers(s_main_window, (WindowHandlers) {
@@ -168,7 +168,7 @@ static void init() {
 	window_stack_push(s_main_window, true);
 	update_time();
   
-  app_message_register_inbox_recieved(inbox_recieved_handler);
+  app_message_register_inbox_received(inbox_received_handler);
   app_message_open(app_message_inbox_size_maximum(), app_message_outbox_size_maximum());
 }
 
