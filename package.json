@@ -1,14 +1,18 @@
 {
     "author": "kenneth.schlatter@gmail.com",
-    "dependencies": {},
+    "dependencies": {
+        "pebble-events": "^1.0.2",
+        "pebble-owm-weather": "^1.0.0"
+    },
     "keywords": [],
-    "name": "asl-big",
+    "name": "asl",
     "pebble": {
         "capabilities": [
+            "location",
             "configurable"
         ],
-        "displayName": "ASL Big Numbrs",
-        "enableMultiJS": false,
+        "displayName": "Spark League Weather",
+        "enableMultiJS": true,
         "messageKeys": {
             "KEY_COLOR_BLUE": 2,
             "KEY_COLOR_GREEN": 1,

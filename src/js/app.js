@@ -1,3 +1,7 @@
+var OWMWeather = require('pebble-owm-weather');
+
+var owmWeather = new OWMWeather();
+
 Pebble.addEventListener('ready', function(){
   console.log('PebbleKit JS ready!');
 });
@@ -28,4 +32,9 @@ Pebble.addEventListener('webviewclosed', function(e){
   }, function(){
     console.log('Send failed. :(');
   });
+});
+
+Pebble.addEventListener('appmessage', function(e) {
+  console.log('appmessage: ' + JSON.stringify(e.payload));
+  owmWeather.appMessageHandler(e);
 });
