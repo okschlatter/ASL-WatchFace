@@ -11,7 +11,8 @@
 static Window *s_main_window;
 static TextLayer *s_hour_layer;
 static TextLayer *s_minutes_layer;
-static TextLayer *s_weather_layer;
+static TextLayer *s_temp_layer;
+static TextLayer *s_short_layer;
 static GFont s_hour_font;
 static GFont s_minutes_font;
 static BitmapLayer *logo_layer;
@@ -21,30 +22,41 @@ static void weather_callback(OWMWeatherInfo *info, OWMWeatherStatus status){
   switch(status){
     case OWMWeatherStatusAvailable:
     {
-      static char s_buffer[256];
-      snprintf(s_buffer, sizeof(s_buffer),
-              "Temperature (K/C/F): %d/%d/%d\n\nshort:\n%s",
-              info->temp_k, info->temp_c, info->temp_f, info->description_short);
-              text_layer_set_text(s_weather_layer, s_buffer);
+      static char temp_buffer[256];
+      snprintf(temp_buffer, sizeof(temp_buffer),
+              "Temp. (K/C/F):\n%d/%d/%d",
+              info->temp_k, info->temp_c, info->temp_f);
+              text_layer_set_text(s_temp_layer, temp_buffer);
+      static char short_buffer[256];
+      snprintf(short_buffer, sizeof(short_buffer),
+              "%s",
+              info->description_short);
+              text_layer_set_text(s_short_layer, short_buffer);
     }
     break;
       case OWMWeatherStatusNotYetFetched:
-        text_layer_set_text(s_weather_layer, "Not Yet Fetched");
+        text_layer_set_text(s_temp_layer, "Not Yet Fetched");
+        text_layer_set_text(s_short_layer, "\U0001F636");
         break;
       case OWMWeatherStatusBluetoothDisconnected:
-        text_layer_set_text(s_weather_layer, "Bluetooth Disconnected");
+        text_layer_set_text(s_temp_layer, "Bluetooth Disconnected");
+        text_layer_set_text(s_short_layer, "\U0001F4A9");
         break;
       case OWMWeatherStatusPending:
-        text_layer_set_text(s_weather_layer, "Pending");
+        text_layer_set_text(s_temp_layer, "Pending");
+        text_layer_set_text(s_short_layer, "\U0001F601");
         break;
       case OWMWeatherStatusFailed:
-        text_layer_set_text(s_weather_layer, "Failed");
+        text_layer_set_text(s_temp_layer, "Failed");
+        text_layer_set_text(s_short_layer, "\U0001F629");
         break;
       case OWMWeatherStatusBadKey:
-        text_layer_set_text(s_weather_layer, "Bad Key!");
+        text_layer_set_text(s_temp_layer, "Bad Key!");
+        text_layer_set_text(s_short_layer, "\U0001F633");
         break;
       case OWMWeatherStatusLocationUnavailable:
-        text_layer_set_text(s_weather_layer, "Location Unavailable");
+        text_layer_set_text(s_temp_layer, "Location Unavailable");
+        text_layer_set_text(s_short_layer, "\U0001F608");
         break;
   }
 }
@@ -162,28 +174,41 @@ layer_add_child(window_get_root_layer(window), bitmap_layer_get_layer(logo_layer
 	text_layer_set_text_color(s_minutes_layer, GColorBlack);
 	text_layer_set_text(s_minutes_layer, "00");
 	
-  //Weather Layer
+  //Temp layer
   #if defined(PBL_RECT)
-    s_weather_layer = text_layer_create(GRect (0, 104, 144, 50));
+    s_temp_layer = text_layer_create(GRect (0, 0, 144, 45));
   #elif defined(PBL_ROUND)
-    s_weather_layer = text_layer_create(GRect (0, 140, 180, 35));
+    s_temp_layer = text_layer_create(GRect (0, 0, 180, 45));
   #endif
-  text_layer_set_background_color(s_weather_layer, GColorClear);
-  text_layer_set_text_color(s_weather_layer, GColorBlack);
-  text_layer_set_text(s_weather_layer, "Ready!");
+  text_layer_set_background_color(s_temp_layer, GColorClear);
+  text_layer_set_text_color(s_temp_layer, GColorBlack);
+  text_layer_set_text(s_temp_layer, "Ready!");
+  
+  //Short Layer
+  #if defined(PBL_RECT)
+    s_short_layer = text_layer_create(GRect (0, 130, 144, 18));
+  #elif defined(PBL_ROUND)
+    s_short_layer = text_layer_create(GRect (0, 145, 180, 30));
+  #endif
+  text_layer_set_background_color(s_short_layer, GColorClear);
+  text_layer_set_text_color(s_short_layer, GColorBlack);
+  text_layer_set_text(s_short_layer, "\U0001F61C");
   
 	//Make it look more like a watch
 	text_layer_set_font(s_hour_layer, s_hour_font);
 	text_layer_set_font(s_minutes_layer, s_minutes_font);
-  text_layer_set_font(s_weather_layer, fonts_get_system_font(FONT_KEY_GOTHIC_18));
+  text_layer_set_font(s_temp_layer, fonts_get_system_font(FONT_KEY_GOTHIC_18));
+  text_layer_set_font(s_short_layer, fonts_get_system_font(FONT_KEY_GOTHIC_18));
 	text_layer_set_text_alignment(s_hour_layer, GTextAlignmentCenter);
 	text_layer_set_text_alignment(s_minutes_layer, GTextAlignmentCenter);
-  text_layer_set_text_alignment(s_weather_layer, GTextAlignmentCenter);
+  text_layer_set_text_alignment(s_temp_layer, GTextAlignmentCenter);
+  text_layer_set_text_alignment(s_short_layer, GTextAlignmentCenter);
 	
 	//Add hour, miuntes, and weather layers as child windows to the Window's root layer
 	layer_add_child(window_get_root_layer(window), text_layer_get_layer(s_hour_layer));
 	layer_add_child(window_get_root_layer(window), text_layer_get_layer(s_minutes_layer));
-	layer_add_child(window_get_root_layer(window), text_layer_get_layer(s_weather_layer));
+	layer_add_child(window_get_root_layer(window), text_layer_get_layer(s_temp_layer));
+  layer_add_child(window_get_root_layer(window), text_layer_get_layer(s_short_layer));
 }
 
 static void main_window_unload(Window *window) {
