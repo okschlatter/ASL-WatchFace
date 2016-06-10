@@ -102,6 +102,72 @@ static void inbox_received_handler(DictionaryIterator *iter, void *context) {
   }  
 }
 
+static void inbox_dropped_handler(AppMessageResult reason, void *context) {
+  APP_LOG(APP_LOG_LEVEL_DEBUG, "Inbox Dropped");
+  switch(reason){
+    case APP_MSG_OK: {
+      APP_LOG(APP_LOG_LEVEL_DEBUG, "OK");
+    }
+    break;
+    case APP_MSG_SEND_TIMEOUT: {
+      APP_LOG(APP_LOG_LEVEL_DEBUG, "TIMEOUT");
+    }
+    break;
+    case APP_MSG_SEND_REJECTED: {
+      APP_LOG(APP_LOG_LEVEL_DEBUG, "SEND REJECTED");
+    }
+    break;
+    case APP_MSG_NOT_CONNECTED: {
+      APP_LOG(APP_LOG_LEVEL_DEBUG, "NOT CONNECTED");
+    }
+    break;
+    case APP_MSG_APP_NOT_RUNNING: {
+      APP_LOG(APP_LOG_LEVEL_DEBUG, "APP NOT RUNNING");
+    }
+    break;
+    case APP_MSG_BUSY: {
+      APP_LOG(APP_LOG_LEVEL_DEBUG, "BUSY");
+    }
+    break;
+    case APP_MSG_BUFFER_OVERFLOW: {
+      APP_LOG(APP_LOG_LEVEL_DEBUG, "BUFFER OVERFLOW");
+    }
+    break;
+    case APP_MSG_ALREADY_RELEASED: {
+      APP_LOG(APP_LOG_LEVEL_DEBUG, "ALREADY RELEASED");
+    }
+    break;
+    case APP_MSG_CALLBACK_ALREADY_REGISTERED: {
+      APP_LOG(APP_LOG_LEVEL_DEBUG, "CALLBACK ALREADY REGISTERED");
+    }
+    break;
+    case APP_MSG_CALLBACK_NOT_REGISTERED: {
+      APP_LOG(APP_LOG_LEVEL_DEBUG, "CALLBACK NOT REGISTERED");
+    }
+    break;
+    case APP_MSG_OUT_OF_MEMORY: {
+      APP_LOG(APP_LOG_LEVEL_DEBUG, "OUT OF MEMORY");
+    }
+    break;
+    case APP_MSG_CLOSED: {
+      APP_LOG(APP_LOG_LEVEL_DEBUG, "CLOSED");
+    }
+    break;
+    case APP_MSG_INTERNAL_ERROR: {
+      APP_LOG(APP_LOG_LEVEL_DEBUG, "INTERNAL ERROR");
+    }
+    break;
+    case APP_MSG_INVALID_ARGS: {
+      APP_LOG(APP_LOG_LEVEL_DEBUG, "INVALID ARGS");
+    }
+    case APP_MSG_INVALID_STATE: {
+      APP_LOG(APP_LOG_LEVEL_DEBUG, "INVALID STATE");
+    }
+    break;
+  }
+  
+}
+
 static void update_time() {
 	time_t temp = time(NULL);
 	struct tm *tick_time = localtime(&temp);
@@ -249,6 +315,7 @@ static void init() {
 	update_time();
   
   app_message_register_inbox_received(inbox_received_handler);
+  app_message_register_inbox_dropped(inbox_dropped_handler);
   APP_LOG(APP_LOG_LEVEL_DEBUG, "Calling Inbox!");
   app_message_open(app_message_inbox_size_maximum(), app_message_outbox_size_maximum());
   
@@ -256,9 +323,7 @@ static void init() {
   //char *api_key = "12341234123412341234123412341234";
   char *api_key = "50ef49bbe9fe20384c1756a17338d49c";
   owm_weather_init(api_key);
-  app_message_open(app_message_inbox_size_maximum(), app_message_outbox_size_maximum());
-//   app_message_register_inbox_received(inbox_received_handler);
-//   app_message_open(app_message_inbox_size_maximum(), app_message_outbox_size_maximum());
+  events_app_message_open();
 
   app_timer_register(3000, js_ready_handler, NULL);
 }
