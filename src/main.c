@@ -18,22 +18,22 @@ static GFont s_minutes_font;
 static BitmapLayer *logo_layer;
 static GBitmap *logo_bitmap;
 
-static void weather_callback(OWMWeatherInfo *info, OWMWeatherStatus status){
+static void weather_callback(OWMWeatherInfo *info, OWMWeatherStatus status, DictionaryIterator *iter, void *context){
+  APP_LOG(APP_LOG_LEVEL_DEBUG, "Called weather_callback");
+  
   switch(status){
-    case OWMWeatherStatusAvailable:
-    {
+    case OWMWeatherStatusAvailable:{
       static char temp_buffer[256];
       snprintf(temp_buffer, sizeof(temp_buffer),
-              "Temp. (K/C/F):\n%d/%d/%d",
-              info->temp_k, info->temp_c, info->temp_f);
+              "Temp. (C/F):\n%d/%d",
+              info->temp_c, info->temp_f);
               text_layer_set_text(s_temp_layer, temp_buffer);
       APP_LOG(APP_LOG_LEVEL_DEBUG, temp_buffer);
       static char short_buffer[256];
       snprintf(short_buffer, sizeof(short_buffer),
               "%s",
               info->description_short);
-              text_layer_set_text(s_short_layer, short_buffer);
-    }
+      text_layer_set_text(s_short_layer, short_buffer);}
     break;
       case OWMWeatherStatusNotYetFetched:
         text_layer_set_text(s_temp_layer, "Not Yet Fetched");
@@ -66,17 +66,9 @@ static void weather_callback(OWMWeatherInfo *info, OWMWeatherStatus status){
         APP_LOG(APP_LOG_LEVEL_DEBUG, "Location Unavailable");
         break;
   }
-} 
-
-static void js_ready_handler(void *context) {
-  owm_weather_fetch(weather_callback);
-  APP_LOG(APP_LOG_LEVEL_DEBUG, "js_ready_handler called!");
-}
-
-static void inbox_received_handler(DictionaryIterator *iter, void *context) {
   
-  APP_LOG(APP_LOG_LEVEL_DEBUG, "Inbox called!");
-  // Color Scheme?
+    
+        // Color Scheme?
   Tuple *color_red_t = dict_find(iter, KEY_COLOR_RED);
   Tuple *color_green_t = dict_find(iter, KEY_COLOR_GREEN);
   Tuple *color_blue_t = dict_find(iter, KEY_COLOR_BLUE);
@@ -99,7 +91,107 @@ static void inbox_received_handler(DictionaryIterator *iter, void *context) {
     window_set_background_color(s_main_window, bg_color);
     APP_LOG(APP_LOG_LEVEL_DEBUG, "Set new background color!");
   #endif
-  }  
+    }
+  }
+ 
+static void js_ready_handler(void *context) {
+  owm_weather_fetch(weather_callback);
+  APP_LOG(APP_LOG_LEVEL_DEBUG, "js_ready_handler called!");
+}
+
+// static void inbox_received_handler(DictionaryIterator *iter, void *context) {
+  
+//   APP_LOG(APP_LOG_LEVEL_DEBUG, "Inbox called!");
+//   // Color Scheme?
+//   Tuple *color_red_t = dict_find(iter, KEY_COLOR_RED);
+//   Tuple *color_green_t = dict_find(iter, KEY_COLOR_GREEN);
+//   Tuple *color_blue_t = dict_find(iter, KEY_COLOR_BLUE);
+//   if(color_red_t && color_green_t && color_blue_t) {
+//   APP_LOG(APP_LOG_LEVEL_DEBUG, "Got new Background RGB values!");
+//   // Apply the color, if available
+//   #if defined(PBL_BW)
+//     window_set_background_color(s_main_window, GColorWhite);
+//   #elif defined(PBL_COLOR)
+//     int red = color_red_t->value->int32;
+//     int green = color_green_t->value->int32;
+//     int blue = color_blue_t->value->int32;
+  
+//     // Persist values
+//     persist_write_int(KEY_COLOR_RED, red);
+//     persist_write_int(KEY_COLOR_GREEN, green);
+//     persist_write_int(KEY_COLOR_BLUE, blue);
+  
+//     GColor bg_color = GColorFromRGB(red, green, blue);
+//     window_set_background_color(s_main_window, bg_color);
+//     APP_LOG(APP_LOG_LEVEL_DEBUG, "Set new background color!");
+//   #endif
+//   }  
+// }
+
+static void inbox_dropped_handler(AppMessageResult reason, void *context) {
+  APP_LOG(APP_LOG_LEVEL_DEBUG, "Inbox Dropped");
+  switch(reason){
+    case APP_MSG_OK: {
+      APP_LOG(APP_LOG_LEVEL_DEBUG, "OK");
+    }
+    break;
+    case APP_MSG_SEND_TIMEOUT: {
+      APP_LOG(APP_LOG_LEVEL_DEBUG, "TIMEOUT");
+    }
+    break;
+    case APP_MSG_SEND_REJECTED: {
+      APP_LOG(APP_LOG_LEVEL_DEBUG, "SEND REJECTED");
+    }
+    break;
+    case APP_MSG_NOT_CONNECTED: {
+      APP_LOG(APP_LOG_LEVEL_DEBUG, "NOT CONNECTED");
+    }
+    break;
+    case APP_MSG_APP_NOT_RUNNING: {
+      APP_LOG(APP_LOG_LEVEL_DEBUG, "APP NOT RUNNING");
+    }
+    break;
+    case APP_MSG_BUSY: {
+      APP_LOG(APP_LOG_LEVEL_DEBUG, "BUSY");
+    }
+    break;
+    case APP_MSG_BUFFER_OVERFLOW: {
+      APP_LOG(APP_LOG_LEVEL_DEBUG, "BUFFER OVERFLOW");
+    }
+    break;
+    case APP_MSG_ALREADY_RELEASED: {
+      APP_LOG(APP_LOG_LEVEL_DEBUG, "ALREADY RELEASED");
+    }
+    break;
+    case APP_MSG_CALLBACK_ALREADY_REGISTERED: {
+      APP_LOG(APP_LOG_LEVEL_DEBUG, "CALLBACK ALREADY REGISTERED");
+    }
+    break;
+    case APP_MSG_CALLBACK_NOT_REGISTERED: {
+      APP_LOG(APP_LOG_LEVEL_DEBUG, "CALLBACK NOT REGISTERED");
+    }
+    break;
+    case APP_MSG_OUT_OF_MEMORY: {
+      APP_LOG(APP_LOG_LEVEL_DEBUG, "OUT OF MEMORY");
+    }
+    break;
+    case APP_MSG_CLOSED: {
+      APP_LOG(APP_LOG_LEVEL_DEBUG, "CLOSED");
+    }
+    break;
+    case APP_MSG_INTERNAL_ERROR: {
+      APP_LOG(APP_LOG_LEVEL_DEBUG, "INTERNAL ERROR");
+    }
+    break;
+    case APP_MSG_INVALID_ARGS: {
+      APP_LOG(APP_LOG_LEVEL_DEBUG, "INVALID ARGS");
+    }
+    case APP_MSG_INVALID_STATE: {
+      APP_LOG(APP_LOG_LEVEL_DEBUG, "INVALID STATE");
+    }
+    break;
+  }
+  
 }
 
 static void update_time() {
@@ -248,18 +340,14 @@ static void init() {
 	window_stack_push(s_main_window, true);
 	update_time();
   
-  app_message_register_inbox_received(inbox_received_handler);
-  APP_LOG(APP_LOG_LEVEL_DEBUG, "Calling Inbox!");
-  app_message_open(app_message_inbox_size_maximum(), app_message_outbox_size_maximum());
-  
   // Replace this with your own API key from OpenWeatherMap.org
   //char *api_key = "12341234123412341234123412341234";
   char *api_key = "50ef49bbe9fe20384c1756a17338d49c";
   owm_weather_init(api_key);
+  events_app_message_open();
+  app_message_register_inbox_dropped(inbox_dropped_handler);
+  //app_message_register_inbox_received(weather_callback);
   app_message_open(app_message_inbox_size_maximum(), app_message_outbox_size_maximum());
-//   app_message_register_inbox_received(inbox_received_handler);
-//   app_message_open(app_message_inbox_size_maximum(), app_message_outbox_size_maximum());
-
   app_timer_register(3000, js_ready_handler, NULL);
 }
 
