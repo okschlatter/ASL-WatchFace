@@ -1,9 +1,6 @@
 {
     "author": "kenneth.schlatter@gmail.com",
-    "dependencies": {
-        "pebble-events": "^1.0.2",
-        "pebble-owm-weather": "^1.0.0"
-    },
+    "dependencies": {},
     "keywords": [],
     "name": "asl",
     "pebble": {
@@ -16,7 +13,12 @@
         "messageKeys": {
             "KEY_COLOR_BLUE": 2,
             "KEY_COLOR_GREEN": 1,
-            "KEY_COLOR_RED": 0
+            "KEY_COLOR_RED": 0,
+            "KEY_DESCRIPTION": 6,
+            "KEY_LOCATION": 5,
+            "KEY_TEMP_C": 3,
+            "KEY_TEMP_F": 4,
+            "KEY_UNIT": 7
         },
         "projectType": "native",
         "resources": {
@@ -53,7 +55,7 @@
             "basalt",
             "chalk"
         ],
-        "uuid": "2b84f4e5-5d93-4350-99ed-6db1638c92a9",
+        "uuid": "44c1c03d-3eea-479b-969c-9304118b79e3",
         "watchapp": {
             "watchface": true
         }

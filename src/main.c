@@ -1,12 +1,14 @@
 #include <pebble.h>
 #include <pebble_fonts.h>
 
-#include <pebble-owm-weather/owm-weather.h>
-#include <pebble-events/pebble-events.h>
 
 #define KEY_COLOR_RED     0
 #define KEY_COLOR_GREEN   1
 #define KEY_COLOR_BLUE    2
+#define KEY_TEMP_C        3
+#define KEY_TEMP_F        4
+#define KEY_LOCATION      5
+#define KEY_DESCRIPTION   6
 
 static Window *s_main_window;
 static TextLayer *s_hour_layer;
@@ -18,68 +20,20 @@ static GFont s_minutes_font;
 static BitmapLayer *logo_layer;
 static GBitmap *logo_bitmap;
 
-static void weather_callback(OWMWeatherInfo *info, OWMWeatherStatus status){
-  switch(status){
-    case OWMWeatherStatusAvailable:
-    {
-      static char temp_buffer[256];
-      snprintf(temp_buffer, sizeof(temp_buffer),
-              "Temp. (K/C/F):\n%d/%d/%d",
-              info->temp_k, info->temp_c, info->temp_f);
-              text_layer_set_text(s_temp_layer, temp_buffer);
-      APP_LOG(APP_LOG_LEVEL_DEBUG, temp_buffer);
-      static char short_buffer[256];
-      snprintf(short_buffer, sizeof(short_buffer),
-              "%s",
-              info->description_short);
-              text_layer_set_text(s_short_layer, short_buffer);
-    }
-    break;
-      case OWMWeatherStatusNotYetFetched:
-        text_layer_set_text(s_temp_layer, "Not Yet Fetched");
-        text_layer_set_text(s_short_layer, "\U0001F636");
-        APP_LOG(APP_LOG_LEVEL_DEBUG, "Not Yet Fetched");
-        break;
-      case OWMWeatherStatusBluetoothDisconnected:
-        text_layer_set_text(s_temp_layer, "Bluetooth Disconnected");
-        text_layer_set_text(s_short_layer, "\U0001F4A9");
-        APP_LOG(APP_LOG_LEVEL_DEBUG, "Bluetooth Disconnected");
-        break;
-      case OWMWeatherStatusPending:
-        text_layer_set_text(s_temp_layer, "Pending");
-        text_layer_set_text(s_short_layer, "\U0001F601");
-        APP_LOG(APP_LOG_LEVEL_DEBUG, "Pending");
-        break;
-      case OWMWeatherStatusFailed:
-        text_layer_set_text(s_temp_layer, "Failed");
-        text_layer_set_text(s_short_layer, "\U0001F629");
-        APP_LOG(APP_LOG_LEVEL_DEBUG, "Failed");
-        break;
-      case OWMWeatherStatusBadKey:
-        text_layer_set_text(s_temp_layer, "Bad Key!");
-        text_layer_set_text(s_short_layer, "\U0001F633");
-        APP_LOG(APP_LOG_LEVEL_DEBUG, "Bad Key!");
-        break;
-      case OWMWeatherStatusLocationUnavailable:
-        text_layer_set_text(s_temp_layer, "Location Unavailable");
-        text_layer_set_text(s_short_layer, "\U0001F608");
-        APP_LOG(APP_LOG_LEVEL_DEBUG, "Location Unavailable");
-        break;
-  }
-} 
-
-static void js_ready_handler(void *context) {
-  owm_weather_fetch(weather_callback);
-  APP_LOG(APP_LOG_LEVEL_DEBUG, "js_ready_handler called!");
-}
-
 static void inbox_received_handler(DictionaryIterator *iter, void *context) {
   
   APP_LOG(APP_LOG_LEVEL_DEBUG, "Inbox called!");
+  // Weather data?
+  Tuple *temp_c_t = dict_find(iter, KEY_TEMP_C);
+  Tuple *temp_f_t = dict_find(iter, KEY_TEMP_F);
+  Tuple *location_t = dict_find(iter, KEY_LOCATION);
+  Tuple *description_t = dict_find(iter, KEY_DESCRIPTION);
+  
   // Color Scheme?
   Tuple *color_red_t = dict_find(iter, KEY_COLOR_RED);
   Tuple *color_green_t = dict_find(iter, KEY_COLOR_GREEN);
   Tuple *color_blue_t = dict_find(iter, KEY_COLOR_BLUE);
+  
   if(color_red_t && color_green_t && color_blue_t) {
   APP_LOG(APP_LOG_LEVEL_DEBUG, "Got new Background RGB values!");
   // Apply the color, if available
@@ -99,7 +53,17 @@ static void inbox_received_handler(DictionaryIterator *iter, void *context) {
     window_set_background_color(s_main_window, bg_color);
     APP_LOG(APP_LOG_LEVEL_DEBUG, "Set new background color!");
   #endif
-  }  
+  }
+  
+// int temp_c = temp_c_t->value->int32;
+// int temp_f = temp_f_t->value->int32;
+
+// char s_temp_long[] = (temp_c + "\u00B0" + "C\n" + location);
+// char s_short_long[] = description;
+  
+  text_layer_set_text(s_temp_layer, &temp_c_t);
+  text_layer_set_text(s_short_layer, &description_t);
+  
 }
 
 static void update_time() {
@@ -251,22 +215,12 @@ static void init() {
   app_message_register_inbox_received(inbox_received_handler);
   APP_LOG(APP_LOG_LEVEL_DEBUG, "Calling Inbox!");
   app_message_open(app_message_inbox_size_maximum(), app_message_outbox_size_maximum());
-  
-  // Replace this with your own API key from OpenWeatherMap.org
-  //char *api_key = "12341234123412341234123412341234";
-  char *api_key = "50ef49bbe9fe20384c1756a17338d49c";
-  owm_weather_init(api_key);
-  app_message_open(app_message_inbox_size_maximum(), app_message_outbox_size_maximum());
-//   app_message_register_inbox_received(inbox_received_handler);
-//   app_message_open(app_message_inbox_size_maximum(), app_message_outbox_size_maximum());
 
-  app_timer_register(3000, js_ready_handler, NULL);
 }
 
 static void deinit() {
 	//Destroy Window
 	window_destroy(s_main_window);
-  owm_weather_deinit();
 }
 
 int main(void) {
