@@ -55,15 +55,41 @@ static void inbox_received_handler(DictionaryIterator *iter, void *context) {
   #endif
   }
   
-// int temp_c = temp_c_t->value->int32;
+ char deg_c[8] = ("\u00B0 C\n");
+  
+ char temp_c[4];// = temp_c_t->value->int32;
+  memcpy(temp_c, temp_c_t->value->cstring, temp_c_t->length);
 // int temp_f = temp_f_t->value->int32;
+  
+ char location_x[32];
+  memcpy(location_x, location_t->value->cstring, location_t->length);
+  
+ char description_x[256];
+  memcpy(description_x, description_t->value->cstring, description_t->length);
 
-// char s_temp_long[] = (temp_c + "\u00B0" + "C\n" + location);
-// char s_short_long[] = description;
+  char temp_x[256];// = temp_c, "\u00B0", "C\n", location_x;
+  memcpy(temp_x, (temp_c + *deg_c + *location_x), 256);
   
-  text_layer_set_text(s_temp_layer, &temp_c_t);
-  text_layer_set_text(s_short_layer, &description_t);
+  text_layer_set_text(s_temp_layer, temp_x);
+  text_layer_set_text(s_short_layer, description_x);
   
+}
+
+static void request_weather(void) {
+  APP_LOG(APP_LOG_LEVEL_DEBUG, "REQUESTING WEATHER");
+  DictionaryIterator *iter;
+  app_message_outbox_begin(&iter);
+
+  if (!iter) {
+    // Error creating outbound message
+    return;
+  }
+
+  int value = 1;
+  dict_write_int(iter, 1, &value, sizeof(int), true);
+  dict_write_end(iter);
+
+  app_message_outbox_send();
 }
 
 static void update_time() {
@@ -183,6 +209,9 @@ layer_add_child(window_get_root_layer(window), bitmap_layer_get_layer(logo_layer
 	layer_add_child(window_get_root_layer(window), text_layer_get_layer(s_minutes_layer));
 	layer_add_child(window_get_root_layer(window), text_layer_get_layer(s_temp_layer));
   layer_add_child(window_get_root_layer(window), text_layer_get_layer(s_short_layer));
+  
+  // Request Weather
+  request_weather();
 }
 
 static void main_window_unload(Window *window) {

@@ -1,5 +1,8 @@
 var ajax = require('ajax');
 
+var lat;
+var lon;
+
 Pebble.addEventListener('ready', function(){
   console.log('PebbleKit JS ready!');
 });
@@ -45,8 +48,6 @@ function error(err) {
   console.log('location error (' + err.code + '): ' + err.message);
 }
 
-/* ... */
-
 // Choose options about the data returned
 var options = {
   enableHighAccuracy: true,
@@ -54,8 +55,14 @@ var options = {
   timeout: 10000
 };
 
-// Request current position
-navigator.geolocation.getCurrentPosition(success, error, options);
+// Request current position when app message received
+Pebble.addEventListener('appmessage', function (e) {
+  navigator.geolocation.getCurrentPosition(success, error,
+    options);
+  console.log(e.type);
+  console.log(e.payload.temperature);
+  console.log('message!');
+});
 
 // Construct URL to get weather at
 // Get your own API key at https://openweathermap.org
