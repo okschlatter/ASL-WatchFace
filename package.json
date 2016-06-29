@@ -1,6 +1,7 @@
 {
     "author": "kenneth.schlatter@gmail.com",
     "dependencies": {
+        "pebble-clay": "^1.0.1",
         "pebble-events": "^1.0.2",
         "pebble-owm-weather": "^1.0.0"
     },
@@ -13,11 +14,10 @@
         ],
         "displayName": "Spark League Weather",
         "enableMultiJS": true,
-        "messageKeys": {
-            "KEY_COLOR_BLUE": 2,
-            "KEY_COLOR_GREEN": 1,
-            "KEY_COLOR_RED": 0
-        },
+        "messageKeys": [
+            "BackgroundColor",
+            "TempUnit"
+        ],
         "projectType": "native",
         "resources": {
             "media": [

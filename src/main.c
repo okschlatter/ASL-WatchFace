@@ -4,9 +4,8 @@
 #include <pebble-owm-weather/owm-weather.h>
 #include <pebble-events/pebble-events.h>
 
-#define KEY_COLOR_RED     0
-#define KEY_COLOR_GREEN   1
-#define KEY_COLOR_BLUE    2
+#define BackroundColor     
+#define TempUnit           
 
 static Window *s_main_window;
 static TextLayer *s_hour_layer;
@@ -17,18 +16,33 @@ static GFont s_hour_font;
 static GFont s_minutes_font;
 static BitmapLayer *logo_layer;
 static GBitmap *logo_bitmap;
+char temp_unit;
+
+ // Replace this with your own API key from OpenWeatherMap.org
+char *api_key = "50ef49bbe9fe20384c1756a17338d49c";
 
 static void weather_callback(OWMWeatherInfo *info, OWMWeatherStatus status){
   switch(status){
     case OWMWeatherStatusAvailable:
     {
-      static char temp_buffer[256];
-      snprintf(temp_buffer, sizeof(temp_buffer),
-              "Temp. (K/C/F):\n%d/%d/%d",
-              info->temp_k, info->temp_c, info->temp_f);
-              text_layer_set_text(s_temp_layer, temp_buffer);
+    static char temp_buffer[128];
+      if(temp_unit == 'F'){
+        snprintf(temp_buffer, sizeof(temp_buffer),         
+        "%d \u00B0" "F",
+        info->temp_f);
+      } else if(temp_unit == 'C'){
+        snprintf(temp_buffer, sizeof(temp_buffer),         
+        "%d \u00B0" "C",
+        info->temp_c);
+      } else {
+        snprintf(temp_buffer, sizeof(temp_buffer),         
+        "%d \u00B0" "K",
+        info->temp_k);
+      };
+      text_layer_set_text(s_temp_layer, temp_buffer);
+
       APP_LOG(APP_LOG_LEVEL_DEBUG, temp_buffer);
-      static char short_buffer[256];
+      static char short_buffer[128];
       snprintf(short_buffer, sizeof(short_buffer),
               "%s",
               info->description_short);
@@ -68,38 +82,28 @@ static void weather_callback(OWMWeatherInfo *info, OWMWeatherStatus status){
   }
 } 
 
-static void js_ready_handler(void *context) {
-  owm_weather_fetch(weather_callback);
-  APP_LOG(APP_LOG_LEVEL_DEBUG, "js_ready_handler called!");
-}
-
-static void inbox_received_handler(DictionaryIterator *iter, void *context) {
+static void config_inbox_received(DictionaryIterator *iter, void *context) {
   
   APP_LOG(APP_LOG_LEVEL_DEBUG, "Inbox called!");
-  // Color Scheme?
-  Tuple *color_red_t = dict_find(iter, KEY_COLOR_RED);
-  Tuple *color_green_t = dict_find(iter, KEY_COLOR_GREEN);
-  Tuple *color_blue_t = dict_find(iter, KEY_COLOR_BLUE);
-  if(color_red_t && color_green_t && color_blue_t) {
-  APP_LOG(APP_LOG_LEVEL_DEBUG, "Got new Background RGB values!");
-  // Apply the color, if available
-  #if defined(PBL_BW)
-    window_set_background_color(s_main_window, GColorWhite);
-  #elif defined(PBL_COLOR)
-    int red = color_red_t->value->int32;
-    int green = color_green_t->value->int32;
-    int blue = color_blue_t->value->int32;
-  
-    // Persist values
-    persist_write_int(KEY_COLOR_RED, red);
-    persist_write_int(KEY_COLOR_GREEN, green);
-    persist_write_int(KEY_COLOR_BLUE, blue);
-  
-    GColor bg_color = GColorFromRGB(red, green, blue);
+  // Get color
+  Tuple *bg_color_t = dict_find(iter, MESSAGE_KEY_BackgroundColor);
+  if(bg_color_t){
+    GColor bg_color = GColorFromHEX(bg_color_t->value->int32);
     window_set_background_color(s_main_window, bg_color);
-    APP_LOG(APP_LOG_LEVEL_DEBUG, "Set new background color!");
-  #endif
-  }  
+    APP_LOG(APP_LOG_LEVEL_DEBUG, "Set new Background Color");
+  }
+  
+  Tuple *temp_unit_t = dict_find(iter, MESSAGE_KEY_TempUnit);
+  if(temp_unit_t){
+    char *temp_unit = temp_unit_t->value->cstring;
+    owm_weather_init(api_key);
+    APP_LOG(APP_LOG_LEVEL_DEBUG, "Set new Temp Unit, refreshed weather");
+  }
+}
+
+static void js_ready_handler(void *context) {
+  APP_LOG(APP_LOG_LEVEL_DEBUG, "js_ready_handler called!");
+  owm_weather_fetch(weather_callback);
 }
 
 static void inbox_dropped_handler(AppMessageResult reason, void *context) {
@@ -313,19 +317,15 @@ static void init() {
   });
 	window_stack_push(s_main_window, true);
 	update_time();
-  
-  app_message_register_inbox_received(inbox_received_handler);
-  app_message_register_inbox_dropped(inbox_dropped_handler);
-  APP_LOG(APP_LOG_LEVEL_DEBUG, "Calling Inbox!");
-  app_message_open(app_message_inbox_size_maximum(), app_message_outbox_size_maximum());
-  
-  // Replace this with your own API key from OpenWeatherMap.org
-  //char *api_key = "12341234123412341234123412341234";
-  char *api_key = "50ef49bbe9fe20384c1756a17338d49c";
+
   owm_weather_init(api_key);
   events_app_message_open();
 
   app_timer_register(3000, js_ready_handler, NULL);
+  
+  app_message_register_inbox_received(config_inbox_received);
+  app_message_register_inbox_dropped(inbox_dropped_handler);
+  app_message_open(app_message_inbox_size_maximum(), app_message_outbox_size_maximum());
 }
 
 static void deinit() {
