@@ -1,9 +1,6 @@
 {
     "author": "kenneth.schlatter@gmail.com",
-    "dependencies": {
-        "pebble-events": "^1.0.2",
-        "pebble-owm-weather": "^1.0.0"
-    },
+    "dependencies": {},
     "keywords": [],
     "name": "asl",
     "pebble": {
