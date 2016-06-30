@@ -1,8 +1,8 @@
 #include <pebble.h>
 #include <pebble_fonts.h>
-
-#include <pebble-owm-weather/owm-weather.h>
 #include <pebble-events/pebble-events.h>
+#include <pebble-owm-weather/owm-weather.h>
+
 
 #define BackroundColor     
 #define TempUnit           
@@ -15,76 +15,19 @@ static TextLayer *s_short_layer;
 static GFont s_hour_font;
 static GFont s_minutes_font;
 static BitmapLayer *logo_layer;
+static OWMWeatherInfo *s_info;
+static OWMWeatherCallback *s_callback;
+static OWMWeatherStatus s_status;
 static GBitmap *logo_bitmap;
-char temp_unit;
+static char temp_unit[2];
+static char temp_buffer[128];
 
  // Replace this with your own API key from OpenWeatherMap.org
-char *api_key = "50ef49bbe9fe20384c1756a17338d49c";
+static char *api_key = "50ef49bbe9fe20384c1756a17338d49c";
 
-static void weather_callback(OWMWeatherInfo *info, OWMWeatherStatus status){
-  switch(status){
-    case OWMWeatherStatusAvailable:
-    {
-    static char temp_buffer[128];
-      if(temp_unit == 'F'){
-        snprintf(temp_buffer, sizeof(temp_buffer),         
-        "%d \u00B0" "F",
-        info->temp_f);
-      } else if(temp_unit == 'C'){
-        snprintf(temp_buffer, sizeof(temp_buffer),         
-        "%d \u00B0" "C",
-        info->temp_c);
-      } else {
-        snprintf(temp_buffer, sizeof(temp_buffer),         
-        "%d \u00B0" "K",
-        info->temp_k);
-      };
-      text_layer_set_text(s_temp_layer, temp_buffer);
-
-      APP_LOG(APP_LOG_LEVEL_DEBUG, temp_buffer);
-      static char short_buffer[128];
-      snprintf(short_buffer, sizeof(short_buffer),
-              "%s",
-              info->description_short);
-              text_layer_set_text(s_short_layer, short_buffer);
-    }
-    break;
-      case OWMWeatherStatusNotYetFetched:
-        text_layer_set_text(s_temp_layer, "Not Yet Fetched");
-        text_layer_set_text(s_short_layer, "\U0001F636");
-        APP_LOG(APP_LOG_LEVEL_DEBUG, "Not Yet Fetched");
-        break;
-      case OWMWeatherStatusBluetoothDisconnected:
-        text_layer_set_text(s_temp_layer, "Bluetooth Disconnected");
-        text_layer_set_text(s_short_layer, "\U0001F4A9");
-        APP_LOG(APP_LOG_LEVEL_DEBUG, "Bluetooth Disconnected");
-        break;
-      case OWMWeatherStatusPending:
-        text_layer_set_text(s_temp_layer, "Pending");
-        text_layer_set_text(s_short_layer, "\U0001F601");
-        APP_LOG(APP_LOG_LEVEL_DEBUG, "Pending");
-        break;
-      case OWMWeatherStatusFailed:
-        text_layer_set_text(s_temp_layer, "Failed");
-        text_layer_set_text(s_short_layer, "\U0001F629");
-        APP_LOG(APP_LOG_LEVEL_DEBUG, "Failed");
-        break;
-      case OWMWeatherStatusBadKey:
-        text_layer_set_text(s_temp_layer, "Bad Key!");
-        text_layer_set_text(s_short_layer, "\U0001F633");
-        APP_LOG(APP_LOG_LEVEL_DEBUG, "Bad Key!");
-        break;
-      case OWMWeatherStatusLocationUnavailable:
-        text_layer_set_text(s_temp_layer, "Location Unavailable");
-        text_layer_set_text(s_short_layer, "\U0001F608");
-        APP_LOG(APP_LOG_LEVEL_DEBUG, "Location Unavailable");
-        break;
-  }
-} 
-
-static void config_inbox_received(DictionaryIterator *iter, void *context) {
-  
+static void inbox_received_handler(DictionaryIterator *iter, void *context) {
   APP_LOG(APP_LOG_LEVEL_DEBUG, "Inbox called!");
+  
   // Get color
   Tuple *bg_color_t = dict_find(iter, MESSAGE_KEY_BackgroundColor);
   if(bg_color_t){
@@ -96,80 +39,151 @@ static void config_inbox_received(DictionaryIterator *iter, void *context) {
   Tuple *temp_unit_t = dict_find(iter, MESSAGE_KEY_TempUnit);
   if(temp_unit_t){
     char *temp_unit = temp_unit_t->value->cstring;
-    owm_weather_init(api_key);
-    APP_LOG(APP_LOG_LEVEL_DEBUG, "Set new Temp Unit, refreshed weather");
+    APP_LOG(APP_LOG_LEVEL_DEBUG, "Set new Temp Unit");
   }
+  
+  Tuple *reply_tuple = dict_find(iter, MESSAGE_KEY_Reply);
+  if(reply_tuple) {
+
+    Tuple *desc_short_tuple = dict_find(iter, MESSAGE_KEY_DescriptionShort);
+    strncpy(s_info->description_short, desc_short_tuple->value->cstring, OWM_WEATHER_BUFFER_SIZE);
+
+    Tuple *temp_tuple = dict_find(iter, MESSAGE_KEY_TempK);
+    s_info->temp_k = temp_tuple->value->int32;
+    s_info->temp_c = s_info->temp_k - 273;
+    s_info->temp_f = ((s_info->temp_c) * 1.8) + 32;
+
+    s_status = OWMWeatherStatusAvailable;
+    app_message_deregister_callbacks();
+    s_callback(s_info, s_status);
+    
+      if(*temp_unit == 'F'){
+        snprintf(temp_buffer, sizeof(temp_buffer),         
+        (*temp_f) + " \u00B0" + 'F');
+      } else if(*temp_unit == 'C'){
+        snprintf(*temp_buffer, sizeof(temp_buffer),         
+        (*temp_c) + " \u00B0" + 'C');
+      } else {
+        snprintf(temp_buffer, sizeof(temp_buffer),         
+        (*temp_k) + " \u00B0" + 'K');
+      };
+      text_layer_set_text(s_temp_layer, temp_buffer);
+
+      APP_LOG(APP_LOG_LEVEL_DEBUG, temp_buffer);
+      static char short_buffer[128];
+      snprintf(short_buffer, sizeof(short_buffer),
+      description_short);
+              text_layer_set_text(s_short_layer, short_buffer);
+  }
+
+  Tuple *err_tuple = dict_find(iter, MESSAGE_KEY_BadKey);
+  if(err_tuple) {
+    s_status = OWMWeatherStatusBadKey;
+    s_callback(s_info, s_status);
+    text_layer_set_text(s_temp_layer, "Bad Key!");
+    text_layer_set_text(s_short_layer, "\U0001F633");
+    APP_LOG(APP_LOG_LEVEL_DEBUG, "Bad Key!");
+  }
+
+  err_tuple = dict_find(iter, MESSAGE_KEY_LocationUnavailable);
+  if(err_tuple) {
+    s_status = OWMWeatherStatusLocationUnavailable;
+    s_callback(s_info, s_status);
+    text_layer_set_text(s_temp_layer, "Location Unavailable");
+    text_layer_set_text(s_short_layer, "\U0001F608");
+    APP_LOG(APP_LOG_LEVEL_DEBUG, "Location Unavailable");
+  }
+
 }
+
+// static void fail_and_callback() {
+//   APP_LOG(APP_LOG_LEVEL_ERROR, "Failed to send request!");
+//   s_status = OWMWeatherStatusFailed;
+//   s_callback(s_info, s_status);
+// }
+
+// static bool fetch() {
+//   DictionaryIterator *out;
+//   AppMessageResult result = app_message_outbox_begin(&out);
+//   if(result != APP_MSG_OK) {
+//     fail_and_callback();
+//     return false;
+//   }
+
+//   dict_write_cstring(out, MESSAGE_KEY_Request, s_api_key);
+
+//   result = app_message_outbox_send();
+//   if(result != APP_MSG_OK) {
+//     fail_and_callback();
+//     return false;
+//   }
+
+//   s_status = OWMWeatherStatusPending;
+//   s_callback(s_info, s_status);
+//   return true;
+// }
+
+// void owm_weather_init(char *api_key) {
+//   if(s_info) {
+//     free(s_info);
+//   }
+
+//   if(!api_key) {
+//     APP_LOG(APP_LOG_LEVEL_ERROR, "API key was NULL!");
+//     return;
+//   }
+
+//   strncpy(s_api_key, api_key, sizeof(s_api_key));
+
+//   s_info = (OWMWeatherInfo*)malloc(sizeof(OWMWeatherInfo));
+//   s_status = OWMWeatherStatusNotYetFetched;
+//   events_app_message_request_inbox_size(2026);
+//   events_app_message_request_outbox_size(656);
+//   events_app_message_register_inbox_received(inbox_received_handler, NULL);
+// }
+
+// bool owm_weather_fetch(OWMWeatherCallback *callback) {
+//   if(!s_info) {
+//     APP_LOG(APP_LOG_LEVEL_ERROR, "OWM Weather library is not initialized!");
+//     return false;
+//   }
+
+//   if(!callback) {
+//     APP_LOG(APP_LOG_LEVEL_ERROR, "OWMWeatherCallback was NULL!");
+//     return false;
+//   }
+
+//   s_callback = callback;
+
+//   if(!bluetooth_connection_service_peek()) {
+//     s_status = OWMWeatherStatusBluetoothDisconnected;
+//     s_callback(s_info, s_status);
+//     return false;
+//   }
+
+//   return fetch();
+// }
+
+// void owm_weather_deinit() {
+//   if(s_info) {
+//     free(s_info);
+//     s_info = NULL;
+//     s_callback = NULL;
+//   }
+// }
+
+// OWMWeatherInfo* owm_weather_peek() {
+//   if(!s_info) {
+//     APP_LOG(APP_LOG_LEVEL_ERROR, "OWM Weather library is not initialized!");
+//     return NULL;
+//   }
+
+//   return s_info;
+// }
 
 static void js_ready_handler(void *context) {
   APP_LOG(APP_LOG_LEVEL_DEBUG, "js_ready_handler called!");
   owm_weather_fetch(weather_callback);
-}
-
-static void inbox_dropped_handler(AppMessageResult reason, void *context) {
-  APP_LOG(APP_LOG_LEVEL_DEBUG, "Inbox Dropped");
-  switch(reason){
-    case APP_MSG_OK: {
-      APP_LOG(APP_LOG_LEVEL_DEBUG, "OK");
-    }
-    break;
-    case APP_MSG_SEND_TIMEOUT: {
-      APP_LOG(APP_LOG_LEVEL_DEBUG, "TIMEOUT");
-    }
-    break;
-    case APP_MSG_SEND_REJECTED: {
-      APP_LOG(APP_LOG_LEVEL_DEBUG, "SEND REJECTED");
-    }
-    break;
-    case APP_MSG_NOT_CONNECTED: {
-      APP_LOG(APP_LOG_LEVEL_DEBUG, "NOT CONNECTED");
-    }
-    break;
-    case APP_MSG_APP_NOT_RUNNING: {
-      APP_LOG(APP_LOG_LEVEL_DEBUG, "APP NOT RUNNING");
-    }
-    break;
-    case APP_MSG_BUSY: {
-      APP_LOG(APP_LOG_LEVEL_DEBUG, "BUSY");
-    }
-    break;
-    case APP_MSG_BUFFER_OVERFLOW: {
-      APP_LOG(APP_LOG_LEVEL_DEBUG, "BUFFER OVERFLOW");
-    }
-    break;
-    case APP_MSG_ALREADY_RELEASED: {
-      APP_LOG(APP_LOG_LEVEL_DEBUG, "ALREADY RELEASED");
-    }
-    break;
-    case APP_MSG_CALLBACK_ALREADY_REGISTERED: {
-      APP_LOG(APP_LOG_LEVEL_DEBUG, "CALLBACK ALREADY REGISTERED");
-    }
-    break;
-    case APP_MSG_CALLBACK_NOT_REGISTERED: {
-      APP_LOG(APP_LOG_LEVEL_DEBUG, "CALLBACK NOT REGISTERED");
-    }
-    break;
-    case APP_MSG_OUT_OF_MEMORY: {
-      APP_LOG(APP_LOG_LEVEL_DEBUG, "OUT OF MEMORY");
-    }
-    break;
-    case APP_MSG_CLOSED: {
-      APP_LOG(APP_LOG_LEVEL_DEBUG, "CLOSED");
-    }
-    break;
-    case APP_MSG_INTERNAL_ERROR: {
-      APP_LOG(APP_LOG_LEVEL_DEBUG, "INTERNAL ERROR");
-    }
-    break;
-    case APP_MSG_INVALID_ARGS: {
-      APP_LOG(APP_LOG_LEVEL_DEBUG, "INVALID ARGS");
-    }
-    case APP_MSG_INVALID_STATE: {
-      APP_LOG(APP_LOG_LEVEL_DEBUG, "INVALID STATE");
-    }
-    break;
-  }
-  
 }
 
 static void update_time() {
@@ -323,8 +337,7 @@ static void init() {
 
   app_timer_register(3000, js_ready_handler, NULL);
   
-  app_message_register_inbox_received(config_inbox_received);
-  app_message_register_inbox_dropped(inbox_dropped_handler);
+  app_message_register_inbox_received(inbox_received_handler);
   app_message_open(app_message_inbox_size_maximum(), app_message_outbox_size_maximum());
 }
 
