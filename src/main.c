@@ -20,10 +20,75 @@ static OWMWeatherCallback *s_callback;
 static OWMWeatherStatus s_status;
 static GBitmap *logo_bitmap;
 static char temp_unit[2];
+static char temp_k[];
+static char temp_f[];
+static char temp_c[];
+static char description_short[];
 static char temp_buffer[128];
 
  // Replace this with your own API key from OpenWeatherMap.org
 static char *api_key = "50ef49bbe9fe20384c1756a17338d49c";
+
+static void weather_callback(OWMWeatherInfo *info, OWMWeatherStatus status){
+  switch(status){
+    case OWMWeatherStatusAvailable:
+    {
+    static char temp_buffer[128];
+      if(*temp_unit == 'F'){
+        snprintf(temp_buffer, sizeof(temp_buffer),         
+        "%d \u00B0" "F",
+        info->temp_f);
+      } else if(*temp_unit == 'C'){
+        snprintf(temp_buffer, sizeof(temp_buffer),         
+        "%d \u00B0" "C",
+        info->temp_c);
+      } else {
+        snprintf(temp_buffer, sizeof(temp_buffer),         
+        "%d \u00B0" "K",
+        info->temp_k);
+      };
+      text_layer_set_text(s_temp_layer, temp_buffer);
+
+      APP_LOG(APP_LOG_LEVEL_DEBUG, temp_buffer);
+      static char short_buffer[128];
+      snprintf(short_buffer, sizeof(short_buffer),
+              "%s",
+              info->description_short);
+              text_layer_set_text(s_short_layer, short_buffer);
+    }
+    break;
+      case OWMWeatherStatusNotYetFetched:
+        text_layer_set_text(s_temp_layer, "Not Yet Fetched");
+        text_layer_set_text(s_short_layer, "\U0001F636");
+        APP_LOG(APP_LOG_LEVEL_DEBUG, "Not Yet Fetched");
+        break;
+      case OWMWeatherStatusBluetoothDisconnected:
+        text_layer_set_text(s_temp_layer, "Bluetooth Disconnected");
+        text_layer_set_text(s_short_layer, "\U0001F4A9");
+        APP_LOG(APP_LOG_LEVEL_DEBUG, "Bluetooth Disconnected");
+        break;
+      case OWMWeatherStatusPending:
+        text_layer_set_text(s_temp_layer, "Pending");
+        text_layer_set_text(s_short_layer, "\U0001F601");
+        APP_LOG(APP_LOG_LEVEL_DEBUG, "Pending");
+        break;
+      case OWMWeatherStatusFailed:
+        text_layer_set_text(s_temp_layer, "Failed");
+        text_layer_set_text(s_short_layer, "\U0001F629");
+        APP_LOG(APP_LOG_LEVEL_DEBUG, "Failed");
+        break;
+      case OWMWeatherStatusBadKey:
+        text_layer_set_text(s_temp_layer, "Bad Key!");
+        text_layer_set_text(s_short_layer, "\U0001F633");
+        APP_LOG(APP_LOG_LEVEL_DEBUG, "Bad Key!");
+        break;
+      case OWMWeatherStatusLocationUnavailable:
+        text_layer_set_text(s_temp_layer, "Location Unavailable");
+        text_layer_set_text(s_short_layer, "\U0001F608");
+        APP_LOG(APP_LOG_LEVEL_DEBUG, "Location Unavailable");
+        break;
+  }
+} 
 
 static void inbox_received_handler(DictionaryIterator *iter, void *context) {
   APP_LOG(APP_LOG_LEVEL_DEBUG, "Inbox called!");
@@ -61,7 +126,7 @@ static void inbox_received_handler(DictionaryIterator *iter, void *context) {
         snprintf(temp_buffer, sizeof(temp_buffer),         
         (*temp_f) + " \u00B0" + 'F');
       } else if(*temp_unit == 'C'){
-        snprintf(*temp_buffer, sizeof(temp_buffer),         
+        snprintf(temp_buffer, sizeof(temp_buffer),         
         (*temp_c) + " \u00B0" + 'C');
       } else {
         snprintf(temp_buffer, sizeof(temp_buffer),         
